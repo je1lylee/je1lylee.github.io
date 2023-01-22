@@ -155,7 +155,7 @@ plain_read_timeout = "0s"
 
 跑了一宿，发现情况缓解，但是点还是会时不时出现不连续的情况，这次连carbon自己的指标都不再连续了，那大概率就是carbon自己的问题了。
 
-![go-carbon-cache-size](/assets/res/imgs/go-carbon-cache-size.png)
+![go-carbon-cache-size](/assets/img/go-carbon-cache-size.png)
 
 如上图，有一段时间绿色的线不再是0了，代表cache的队列存在溢出，此时carbon会丢弃掉数据点，这也就是为什么数据点不连续。carbon提供了对应的配置，粗暴的调大它即可。
 
