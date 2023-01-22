@@ -1,6 +1,6 @@
 ---
 title: Graphite Or go-graphite
-author: Jelly Lee
+author: jelly_lee
 date: 2023-01-11 23:02:13 +0800
 categories: [Monitor]
 tags: [graphite, monitor, whisper, go]
