@@ -45,7 +45,7 @@ tags: [hadoop, yarn, knox, gateway]
 
 [releases](https://cwiki.apache.org/confluence/display/KNOX/Apache+Knox+Releases)
 
-官方提供了几种程序包，我们使用`Gateway Server Binary`即可。具体的下载以及解压步骤就不bb了。
+官方提供了几种程序包，我们使用`Gateway Server Binary`即可。具体的下载以及解压参考[Knox 1.6.0 User Guide](https://knox.apache.org/books/knox-1-6-0/user-guide.html)。
 
 
 
@@ -53,4 +53,93 @@ tags: [hadoop, yarn, knox, gateway]
 
 ## HTTPS
 
-Knox是支持https的，但是需要证书。这里我们并不需要配置证书，这一点在刚开始的时候并没有注意到导致浪费了非常多的时间。
+Knox是支持https的，但是需要证书。这里我们并不需要配置证书，这一点在刚开始的时候并没有注意到导致浪费了非常多的时间，将下面的配置加入`gateway-site.xml`中。
+
+```xml
+<!-- 关掉HTTPS -->
+<property>
+        <name>ssl.enabled</name>
+        <value>false</value>
+    </property>
+ 
+<!-- 开放所有请求 -->
+    <property>
+        <name>gateway.dispatch.whitelist</name>
+        <value>^.*$</value>
+        <description>The whitelist to be applied for dispatches associated with the service roles specified by gateway.dispatch.whitelist.services.
+        If the value is DEFAULT, a domain-based whitelist will be derived from the Knox host.</description>
+    </property>
+```
+
+## authentication
+
+knox是提供了多种的身份验证方式，比如默认的sandbox使用的就是这种方式。
+
+```xml
+<provider>
+            <role>authentication</role>
+            <name>ShiroProvider</name>
+            <enabled>true</enabled>
+            <param>
+                <!--
+                session timeout in minutes,  this is really idle timeout,
+                defaults to 30mins, if the property value is not defined,,
+                current client authentication would expire if client idles contiuosly for more than this value
+                -->
+                <name>sessionTimeout</name>
+                <value>30</value>
+            </param>
+            <param>
+                <name>main.ldapRealm</name>
+                <value>org.apache.knox.gateway.shirorealm.KnoxLdapRealm</value>
+            </param>
+            <param>
+                <name>main.ldapContextFactory</name>
+                <value>org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory</value>
+            </param>
+            <param>
+                <name>main.ldapRealm.contextFactory</name>
+                <value>$ldapContextFactory</value>
+            </param>
+            <param>
+                <name>main.ldapRealm.userDnTemplate</name>
+                <value>uid={0},ou=people,dc=hadoop,dc=apache,dc=org</value>
+            </param>
+            <param>
+                <name>main.ldapRealm.contextFactory.url</name>
+                <value>ldap://localhost:33389</value>
+            </param>
+            <param>
+                <name>main.ldapRealm.contextFactory.authenticationMechanism</name>
+                <value>simple</value>
+            </param>
+            <param>
+                <name>urls./**</name>
+                <value>authcBasic</value>
+            </param>
+        </provider>
+```
+
+如果我们不需要任何身份校验，不能简单粗暴的采取如下方式，否则启动的时候将会抛出异常。
+
+```xml
+<provider>
+            <role>authentication</role>
+            <name>ShiroProvider</name>
+            <enabled>false</enabled>
+</provider>
+```
+
+而是应该采取`匿名验证`的方式，就像下面这样
+
+```xml
+<provider>
+            <role>authentication</role>
+            <name>Anonymous</name>
+            <enabled>true</enabled>
+        </provider>
+```
+
+# ending
+
+Knox的能力远不止gateway，它可以与Kerberos进行紧密的耦合实现完整的Hadoop集群身份验证。或者是使用LDAP来进行简单的身份验证以及访问的审计功能。这里我们只用了gateway来解决眼下最着急的问题，终于又可以开心愉快的访问YARN了。
