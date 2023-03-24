@@ -100,3 +100,42 @@ docker push $image
 ```
 
 # 运行一个容器
+
+运行容器非常简单，比如这样：
+
+```shell
+[root@ligd-laptop ~]# docker run -it centos:centos7
+Unable to find image 'centos:centos7' locally
+centos7: Pulling from library/centos
+2d473b07cdd5: Already exists
+Digest: sha256:be65f488b7764ad3638f236b7b515b3678369a5124c47b8d32916d6487418ea4
+Status: Downloaded newer image for centos:centos7
+[root@e0828e112c65 /]#
+```
+
+这样你就可以获得一个centos的容器环境。现在我们该玩儿点有趣的了，比如暴露一个web端口。这里我我们通过端口映射的方式把宿主机的8980映射到容器的8080端口。
+
+```shell
+[root@ligd-laptop ~]# docker run -itd -p 8980:8080 centos:centos7
+da32d849dc57c0f90861d617587436d7b951378d0a923a643fedaae48fd6741d
+```
+
+我们这是做了映射，并没有在容器内启动任何监听8080的服务，这里使用`netstat`来看看是不是映射上了。
+
+```shell
+[root@ligd-laptop ~]# netstat -antlp | grep 8980
+tcp        0      0 0.0.0.0:8980            0.0.0.0:*               LISTEN      21326/docker-proxy
+tcp6       0      0 :::8980                 :::*                    LISTEN      21333/docker-proxy
+```
+
+映射完网络，接下来该挂载驱动器(volume)了,比如这里我想把`/opt/software/grafana-9.3.2`映射到容器内的`/opt/`目录下。
+
+```shell
+[root@ligd-laptop grafana-9.3.2]# docker run -it -v /opt/software/grafana-9.3.2:/opt centos:centos7
+[root@2717b2ce6b67 /]# ls /opt/
+LICENSE          README.md        bin/             data/            public/
+NOTICE.md        VERSION          conf/            plugins-bundled/ scripts/
+```
+
+这样我们在容器内操作这个目录实际上是在操作宿主机上的目录。
+
